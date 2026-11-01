@@ -3,7 +3,7 @@ name = "guideforge"
 version = "0.4.0"
 description = "100% Open-Source Client & Developer Manual Generator with Polyglot Code Runner (Node, Python, Go, Rust)"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<4.0"
 license = { text = "MIT" }
 authors = [
   { name = "GuideForge Open Source Contributors" }
@@ -30,7 +30,6 @@ classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
 ]
@@ -51,7 +50,7 @@ agent = [
   "langchain-ollama>=0.2.0", # MIT License (Local open-source LLM connector for Ollama)
 ]
 tts = [
-  "piper-tts>=1.2.0",     # MIT License (Open-source neural TTS by OHF-Voice/Rhasspy)
+  "piper-tts>=1.2.0; sys_platform == 'linux'", # MIT License (Linux wheel; on Windows/macOS use piper binary or kokoro-onnx/pyttsx3)
   "kokoro-onnx>=0.3.0",   # Apache-2.0 License (Open-weight local neural TTS)
   "pyttsx3>=2.90",        # MPL-2.0 License (Offline wrapper for espeak-ng)
 ]
@@ -97,3 +96,4 @@ addopts = "-v --tb=short"
 python_version = "3.11"
 mypy_path = "src"
 ignore_missing_imports = true
+
