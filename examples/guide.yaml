@@ -1,0 +1,164 @@
+# ==============================================================================
+# GuideForge — Open-Source Client & Developer Guide Configuration (guide.yaml)
+# Supports Both Non-Technical Clients AND Technical Developers + Polyglot Code
+# ==============================================================================
+title: "Getting Started with Your OpenStack Portal & Polyglot SDK"
+description: "A friendly walkthrough for clients managing their account and a complete polyglot reference (Node.js, Python, Go, Rust) for developers."
+version: "2.0"
+audience: "both"                # "client" (non-technical only), "developer" (technical + code), or "both"
+project_dir: "."                # Auto-inspected to detect Node, Python, Go, and Rust stacks
+base_url: "http://localhost:3000"
+browser_engine: "hybrid"        # "playwright" (deterministic), "browser-use" (AI agent via CDP), or "hybrid"
+output_dir: "./dist"
+
+# 100% Open-Source Local LLM for `browser-use` autonomous steps (via Ollama)
+agent_llm:
+  provider: "ollama"
+  model: "llama3.1:8b"
+  base_url: "http://127.0.0.1:11434"
+  context_window: 64000
+  max_steps: 15
+export_formats:
+  - html
+  - md
+  - pdf
+  - docx
+
+branding:
+  company_name: "Northwind Open Platform"
+  logo_path: null
+  primary_color: "#2563EB"
+  secondary_color: "#1E3A8A"
+  accent_color: "#F59E0B"
+  text_color: "#1F2937"
+  background_color: "#F8FAFC"
+  font_family: "Liberation Sans, DejaVu Sans, system-ui, sans-serif"
+  mono_font_family: "DejaVu Sans Mono, Liberation Mono, monospace"
+  intro_title: "Welcome to Northwind Open Platform"
+  intro_subtitle: "Client Portal Walkthrough & Polyglot Developer Reference"
+  outro_title: "Need a Hand or Building an Integration?"
+  outro_contact: "Client Support: care@northwind.example.org | Dev Docs: git.northwind.example.org"
+  background_music: null
+  music_volume: 0.16
+  ducked_volume: 0.04
+
+# 100% Open-Source Local TTS (No commercial cloud copyright or API keys required)
+tts:
+  provider: "piper"             # Options: "piper" (MIT), "kokoro" (Apache-2.0), "espeak-ng" (GPL), "coqui" (MPL-2.0), "pyttsx3"
+  voice: "en_US-lessac-medium"
+  speed: 1.0
+  burn_subtitles: true
+  subtitle_font_size: 24
+
+video:
+  resolution: "1080p"           # Options: "720p", "1080p", "4k"
+  fps: 30
+  intro_duration: 3.5
+  outro_duration: 4.0
+  step_padding_seconds: 0.8
+  cursor_color: "#EF4444"
+  ripple_color: "rgba(37, 99, 235, 0.45)"
+
+# Optional: Auto-start any Node, Python, Go, or Rust server before recording
+app_server:
+  enabled: false
+  language: "python"
+  command: "python3 -m http.server 3000"
+  workdir: "."
+  ready_url: "http://localhost:3000"
+  startup_timeout_sec: 15
+
+steps:
+  - id: "open_sign_in"
+    title: "Open Your Welcome Page"
+    action: "navigate"
+    url: "http://localhost:3000/login"
+    narration: "Welcome to the Northwind Portal. Open the sign-in link from your welcome email to access your account."
+    instruction: "Open the Northwind Portal link provided in your welcome email."
+    developer_note: "The portal frontend serves a session-initialized login view over HTTP/2 and exposes `/api/v1/health` for uptime checks."
+    wait_ms: 1400
+    highlight: false
+    zoom: 1.0
+    callout:
+      type: "tip"
+      title: "Bookmark for One-Click Access"
+      text: "Save this page to your browser bookmarks so you can return to your account anytime."
+    code_block:
+      language: "python"
+      filename: "verify_portal_env.py"
+      execute: true
+      code: |
+        import platform
+        import sys
+        print(f"[Python {platform.python_version()}] Northwind SDK environment ready on {sys.platform}")
+
+  - id: "enter_email"
+    title: "Enter Your Email Address"
+    action: "type"
+    selector: "input[type='email'], #email"
+    value: "alex.rivera@clientcompany.org"
+    annotation_label: "Type your work email here"
+    narration: "Click the email box and enter the email address connected to your account."
+    instruction: "Click the Email Address field and enter the email address registered with your account."
+    developer_note: "For automated service-to-service workflows, authenticate via Node.js or TypeScript using a signed client token."
+    wait_ms: 1200
+    highlight: true
+    zoom: 1.2
+    code_block:
+      language: "node"
+      filename: "auth_check.mjs"
+      execute: true
+      code: |
+        const payload = { user: "alex.rivera@clientcompany.org", scope: "portal:read" };
+        console.log("[Node.js]", JSON.stringify(payload));
+
+  - id: "click_continue"
+    title: "Sign In to Your Dashboard"
+    action: "click"
+    selector: "button[type='submit'], #login-button"
+    annotation_label: "Click Sign In"
+    narration: "Next, click the blue Sign In button to open your personal dashboard."
+    instruction: "Click the blue Sign In button to access your account overview."
+    developer_note: "High-throughput backend microservices can query account summaries directly using the Go SDK."
+    wait_ms: 1500
+    highlight: true
+    zoom: 1.15
+    callout:
+      type: "note"
+      title: "Forgot Your Password?"
+      text: "If you ever need to reset your password, click the 'Reset Password' link right below the Sign In button."
+    code_block:
+      language: "go"
+      filename: "check_account.go"
+      execute: true
+      code: |
+        package main
+        import "fmt"
+        func main() {
+            fmt.Println("[Go] Account summary verified: status=ACTIVE")
+        }
+
+  - id: "download_invoice"
+    title: "Download Your Latest Monthly Invoice"
+    action: "click"
+    selector: "#download-latest-invoice, .btn-download-invoice"
+    annotation_label: "Download PDF Receipt"
+    narration: "From your Billing Summary card, click Download Latest Invoice to save a PDF copy for your records."
+    instruction: "Locate the Billing Summary card and click Download Latest Invoice to save a clean PDF receipt to your computer."
+    developer_note: "For cryptographic invoice checksum verification, compile and run the Rust verification snippet below."
+    wait_ms: 1800
+    highlight: true
+    zoom: 1.25
+    callout:
+      type: "warning"
+      title: "Allow Browser Downloads"
+      text: "If your receipt does not download right away, check that your browser allows file downloads from the portal."
+    code_block:
+      language: "rust"
+      filename: "verify_invoice.rs"
+      execute: true
+      code: |
+        fn main() {
+            let invoice_id = "INV-2026-1101";
+            println!("[Rust] Verified checksum for invoice {}", invoice_id);
+        }

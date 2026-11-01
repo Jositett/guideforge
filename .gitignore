@@ -1,0 +1,38 @@
+# Python & uv virtual environments
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# GuideForge generated output directories
+output/
+guide_output/
+*.mp4
+*.webm
+*.srt
+*.vtt
+
+# OS metadata
+.DS_Store
+Thumbs.db
