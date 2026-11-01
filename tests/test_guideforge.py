@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import io
 import json
+from pathlib import Path
 import tempfile
 import unittest
-from pathlib import Path
 from unittest.mock import patch
 
 from guideforge.cli import main
 from guideforge.config import (
-  OPEN_SOURCE_LICENSE_MANIFEST,
-  CodeSnippet,
-  ConfigValidationError,
-  load_and_validate_config,
+    CodeSnippet,
+    ConfigValidationError,
+    OPEN_SOURCE_LICENSE_MANIFEST,
+    load_and_validate_config,
 )
 from guideforge.polyglot import PolyglotCodeRunner, PolyglotStackDetector
 
@@ -174,4 +174,3 @@ class GuideForgeOpenSourcePolyglotTestSuite(unittest.TestCase):
 
 if __name__ == "__main__":
   unittest.main()
-

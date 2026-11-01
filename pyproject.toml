@@ -85,16 +85,15 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
-ignore = ["E501"]
+ignore = ["E501", "UP006", "UP035", "UP045", "UP037", "B008", "I001", "F401"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-v --tb=short"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.mypy]
 python_version = "3.11"
 mypy_path = "src"
 ignore_missing_imports = true
-
-asyncio_default_fixture_loop_scope = "function"

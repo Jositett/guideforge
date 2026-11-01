@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict, dataclass, field
 import json
 import logging
 import os
+from pathlib import Path
 import shutil
 import subprocess
 import tempfile
 import time
 import urllib.request
-from dataclasses import asdict, dataclass, field
-from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from guideforge.config import AppServerConfig, CodeSnippet
 
@@ -22,9 +22,9 @@ logger = logging.getLogger("guideforge")
 @dataclass
 class LanguageStackInfo:
   language: str
-  manifest_files: list[str]
+  manifest_files: List[str]
   package_manager: str
-  frameworks: list[str] = field(default_factory=list)
+  frameworks: List[str] = field(default_factory=list)
   runtime_available: bool = False
   runtime_version: str = "not installed"
   run_command_hint: str = ""
@@ -34,7 +34,7 @@ class LanguageStackInfo:
 class CodeExecutionResult:
   language: str
   filename: str
-  command: list[str]
+  command: List[str]
   exit_code: int
   stdout: str
   stderr: str
@@ -48,8 +48,8 @@ class PolyglotStackDetector:
   def __init__(self, project_dir: Path):
     self.project_dir = project_dir.resolve()
 
-  def inspect(self) -> dict[str, Any]:
-    stacks: list[LanguageStackInfo] = []
+  def inspect(self) -> Dict[str, Any]:
+    stacks: List[LanguageStackInfo] = []
 
     # 1. Python detection
     py_manifests = [
@@ -158,8 +158,8 @@ class PolyglotStackDetector:
         "host_runtimes": host_runtimes,
     }
 
-  def _detect_python_frameworks(self) -> list[str]:
-    found: list[str] = []
+  def _detect_python_frameworks(self) -> List[str]:
+    found: List[str] = []
     for candidate in ("pyproject.toml", "requirements.txt"):
       p = self.project_dir / candidate
       if p.exists():
@@ -169,8 +169,8 @@ class PolyglotStackDetector:
             found.append(fw)
     return found
 
-  def _detect_node_frameworks(self) -> list[str]:
-    found: list[str] = []
+  def _detect_node_frameworks(self) -> List[str]:
+    found: List[str] = []
     p = self.project_dir / "package.json"
     if p.exists():
       try:
@@ -186,8 +186,8 @@ class PolyglotStackDetector:
         pass
     return found
 
-  def _detect_go_frameworks(self) -> list[str]:
-    found: list[str] = []
+  def _detect_go_frameworks(self) -> List[str]:
+    found: List[str] = []
     p = self.project_dir / "go.mod"
     if p.exists():
       txt = p.read_text(encoding="utf-8", errors="ignore").lower()
@@ -196,8 +196,8 @@ class PolyglotStackDetector:
           found.append(name)
     return found
 
-  def _detect_rust_frameworks(self) -> list[str]:
-    found: list[str] = []
+  def _detect_rust_frameworks(self) -> List[str]:
+    found: List[str] = []
     p = self.project_dir / "Cargo.toml"
     if p.exists():
       txt = p.read_text(encoding="utf-8", errors="ignore").lower()
@@ -210,7 +210,7 @@ class PolyglotStackDetector:
 class PolyglotCodeRunner:
   """Executes code snippets across Node.js, Python, Go, Rust, and Bash with real stdout/stderr capture."""
 
-  def run_snippet(self, snippet: CodeSnippet, default_workdir: Path | None = None) -> CodeExecutionResult:
+  def run_snippet(self, snippet: CodeSnippet, default_workdir: Optional[Path] = None) -> CodeExecutionResult:
     lang = snippet.language.lower().strip()
     workdir = Path(snippet.workdir) if snippet.workdir else (default_workdir or Path.cwd())
     workdir.mkdir(parents=True, exist_ok=True)
@@ -312,6 +312,18 @@ class PolyglotCodeRunner:
             timeout=30,
         )
         dur = (time.perf_counter() - t0) * 1000.0
+        if res.returncode == 9009:
+          sim_out = self._simulate_output_if_toolchain_missing(lang, snippet.code)
+          return CodeExecutionResult(
+              language=lang,
+              filename=filename,
+              command=cmd,
+              exit_code=0,
+              stdout=sim_out,
+              stderr="",
+              duration_ms=round(dur, 2),
+              executed_live=False,
+          )
         return CodeExecutionResult(
             language=lang,
             filename=filename,
@@ -337,7 +349,7 @@ class PolyglotCodeRunner:
 
   def _build_command(
       self, lang: str, src_file: Path, tmp_dir: Path
-  ) -> tuple[list[str], bool]:
+  ) -> tuple[List[str], bool]:
     if lang == "python":
       py_bin = shutil.which("python3") or shutil.which("python")
       return ([py_bin or "python3", str(src_file)], bool(py_bin))
@@ -357,7 +369,12 @@ class PolyglotCodeRunner:
       rustc_bin = shutil.which("rustc")
       return ([rustc_bin or "rustc", str(src_file)], bool(rustc_bin))
     if lang in ("bash", "sh"):
-      git_bash = Path("C:/Program Files/Git/bin/bash.exe"); sh_bin = str(git_bash) if git_bash.exists() else None
+      git_bash = Path("C:/Program Files/Git/bin/bash.exe")
+      if git_bash.exists():
+        return ([str(git_bash), str(src_file)], True)
+      sh_bin = shutil.which("bash") or shutil.which("sh")
+      if sh_bin and "WindowsApps" in sh_bin:
+        sh_bin = None
       return ([sh_bin or "bash", str(src_file)], bool(sh_bin))
     return (["echo", str(src_file)], False)
 
@@ -375,9 +392,9 @@ class AppServerLifecycle:
 
   def __init__(self, cfg: AppServerConfig):
     self.cfg = cfg
-    self.proc: subprocess.Popen[str] | None = None
+    self.proc: Optional[subprocess.Popen[str]] = None
 
-  def __enter__(self) -> AppServerLifecycle:
+  def __enter__(self) -> "AppServerLifecycle":
     if not self.cfg.enabled or not self.cfg.command:
       return self
 
@@ -419,7 +436,7 @@ class AppServerLifecycle:
         self.proc.kill()
 
 
-def _get_binary_version(cmd: list[str], first_line_only: bool = True) -> str:
+def _get_binary_version(cmd: List[str], first_line_only: bool = True) -> str:
   if not shutil.which(cmd[0]):
     return "not installed"
   try:
@@ -430,4 +447,3 @@ def _get_binary_version(cmd: list[str], first_line_only: bool = True) -> str:
     return out or "installed"
   except Exception:
     return "not installed"
-

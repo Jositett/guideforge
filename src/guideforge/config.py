@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
-
+import re
+from typing import Dict, List, Optional, Tuple
 import yaml
 
 VALID_ACTIONS = {
@@ -43,7 +43,7 @@ VALID_RESOLUTIONS = {
 }
 VALID_EXPORT_FORMATS = {"html", "md", "markdown", "pdf", "docx"}
 
-OPEN_SOURCE_LICENSE_MANIFEST: list[dict[str, str]] = [
+OPEN_SOURCE_LICENSE_MANIFEST: List[Dict[str, str]] = [
     {
         "component": "NiceGUI + FastAPI (Web Frontend & Agent Control Plane)",
         "license": "MIT License",
@@ -95,7 +95,7 @@ OPEN_SOURCE_LICENSE_MANIFEST: list[dict[str, str]] = [
 @dataclass
 class BrandingConfig:
   company_name: str = "OpenStack Portal"
-  logo_path: str | None = None
+  logo_path: Optional[str] = None
   primary_color: str = "#2563EB"
   secondary_color: str = "#1E40AF"
   accent_color: str = "#F59E0B"
@@ -107,7 +107,7 @@ class BrandingConfig:
   intro_subtitle: str = "Client Walkthrough & Developer Reference"
   outro_title: str = "Questions or Contributions?"
   outro_contact: str = "Reach our team at support@example.org"
-  background_music: str | None = None
+  background_music: Optional[str] = None
   music_volume: float = 0.16
   ducked_volume: float = 0.04
 
@@ -149,9 +149,9 @@ class AppServerConfig:
   language: str = "python"          # "node", "python", "go", "rust", "bash"
   command: str = ""                 # e.g., "npm run dev", "uv run app.py", "go run .", "cargo run"
   workdir: str = "."
-  ready_url: str | None = None
+  ready_url: Optional[str] = None
   startup_timeout_sec: int = 30
-  env: dict[str, str] = field(default_factory=dict)
+  env: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -159,9 +159,9 @@ class CodeSnippet:
   """Polyglot code block attached to a step for developer documentation and optional live execution."""
   language: str                     # "node", "javascript", "typescript", "python", "go", "rust", "bash"
   code: str
-  filename: str | None = None
+  filename: Optional[str] = None
   execute: bool = True              # If true, GuideForge runs the code and captures real stdout/stderr
-  workdir: str | None = None
+  workdir: Optional[str] = None
   expected_exit_code: int = 0
 
 
@@ -179,17 +179,17 @@ class GuideStep:
   action: str
   narration: str
   instruction: str
-  developer_note: str | None = None
-  selector: str | None = None
-  goal: str | None = None
-  value: str | None = None
-  url: str | None = None
+  developer_note: Optional[str] = None
+  selector: Optional[str] = None
+  goal: Optional[str] = None
+  value: Optional[str] = None
+  url: Optional[str] = None
   wait_ms: int = 1200
   highlight: bool = True
   zoom: float = 1.0
-  annotation_label: str | None = None
-  callout: CalloutBox | None = None
-  code_block: CodeSnippet | None = None
+  annotation_label: Optional[str] = None
+  callout: Optional[CalloutBox] = None
+  code_block: Optional[CodeSnippet] = None
 
 
 @dataclass
@@ -202,16 +202,16 @@ class GuideConfig:
   base_url: str
   browser_engine: str
   output_dir: str
-  export_formats: list[str]
+  export_formats: List[str]
   branding: BrandingConfig
   tts: TTSConfig
   video: VideoConfig
   app_server: AppServerConfig
   agent_llm: AgentLLMConfig
-  steps: list[GuideStep]
+  steps: List[GuideStep]
 
   @property
-  def viewport_size(self) -> tuple[int, int]:
+  def viewport_size(self) -> Tuple[int, int]:
     return VALID_RESOLUTIONS.get(self.video.resolution.lower(), (1920, 1080))
 
 
@@ -219,7 +219,7 @@ class ConfigValidationError(Exception):
   """Raised when `guide.yaml` fails structural or semantic validation."""
 
 
-def load_and_validate_config(config_path: Path) -> tuple[GuideConfig, list[str]]:
+def load_and_validate_config(config_path: Path) -> Tuple[GuideConfig, List[str]]:
   """Loads a YAML config file, validates all fields, and returns warnings."""
   if not config_path.exists():
     raise ConfigValidationError(f"Configuration file not found: {config_path}")
@@ -232,8 +232,8 @@ def load_and_validate_config(config_path: Path) -> tuple[GuideConfig, list[str]]
   if not isinstance(raw, dict):
     raise ConfigValidationError("Top-level configuration must be a YAML mapping.")
 
-  errors: list[str] = []
-  warnings: list[str] = []
+  errors: List[str] = []
+  warnings: List[str] = []
 
   title = str(raw.get("title", "")).strip()
   if not title:
@@ -389,7 +389,7 @@ def load_and_validate_config(config_path: Path) -> tuple[GuideConfig, list[str]]
   if not isinstance(steps_raw, list) or not steps_raw:
     errors.append("Configuration must include a non-empty 'steps' list.")
 
-  steps: list[GuideStep] = []
+  steps: List[GuideStep] = []
   jargon_terms = {"dom", "selector", "xpath", "div", "span", "payload", "webhook", "crud", "regex"}
 
   for idx, s_raw in enumerate(steps_raw, start=1):
@@ -437,7 +437,7 @@ def load_and_validate_config(config_path: Path) -> tuple[GuideConfig, list[str]]
             f"Step #{idx} ('{step_title}'): detected technical jargon {sorted(found_jargon)} in client-facing text. Move technical details into 'developer_note' or 'code_block' and keep 'narration'/'instruction' plain and friendly."
         )
 
-    callout_obj: CalloutBox | None = None
+    callout_obj: Optional[CalloutBox] = None
     c_raw = s_raw.get("callout")
     if isinstance(c_raw, dict):
       c_kind = str(c_raw.get("type", "tip")).lower().strip()
@@ -451,7 +451,7 @@ def load_and_validate_config(config_path: Path) -> tuple[GuideConfig, list[str]]
           text=str(c_raw.get("text", "")).strip(),
       )
 
-    code_obj: CodeSnippet | None = None
+    code_obj: Optional[CodeSnippet] = None
     cb_raw = s_raw.get("code_block")
     if isinstance(cb_raw, dict):
       lang = str(cb_raw.get("language", "python")).lower().strip()

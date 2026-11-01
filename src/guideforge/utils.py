@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 import shutil
 import subprocess
-from pathlib import Path
-from typing import Any
+from typing import Any, List, Tuple
 
 try:
   from PIL import Image, ImageDraw, ImageFont
@@ -22,7 +22,7 @@ logger = logging.getLogger("guideforge")
 # ==============================================================================
 
 
-def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+def _hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
   h = hex_color.lstrip("#")
   if len(h) == 3:
     h = "".join(c * 2 for c in h)
@@ -94,16 +94,16 @@ def _generate_silent_audio(output_path: Path, duration_sec: float) -> None:
     output_path.write_bytes(b"")
 
 
-def _run_cmd(cmd: list[str]) -> None:
+def _run_cmd(cmd: List[str]) -> None:
   res = subprocess.run(cmd, capture_output=True, text=True)
   if res.returncode != 0:
     logger.debug("Command %s returned %d: %s", cmd[0], res.returncode, res.stderr)
 
 
-def _split_caption_chunks(text: str, max_chars: int = 72) -> list[str]:
+def _split_caption_chunks(text: str, max_chars: int = 72) -> List[str]:
   words = text.split()
-  chunks: list[str] = []
-  current: list[str] = []
+  chunks: List[str] = []
+  current: List[str] = []
   for w in words:
     candidate = " ".join(current + [w])
     if len(candidate) > max_chars and current:

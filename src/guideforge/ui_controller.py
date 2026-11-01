@@ -12,22 +12,22 @@ Provides:
 
 from __future__ import annotations
 
+from dataclasses import asdict, dataclass, field
 import json
 import logging
-import time
-import urllib.request
-from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+import time
+from typing import Any, Dict, List, Optional
+import urllib.request
 
 from guideforge.browser_agent import BrowserUseRunner
 from guideforge.config import (
-  OPEN_SOURCE_LICENSE_MANIFEST,
-  SAMPLE_GUIDE_YAML,
-  AgentLLMConfig,
-  CodeSnippet,
-  ConfigValidationError,
-  load_and_validate_config,
+    AgentLLMConfig,
+    CodeSnippet,
+    ConfigValidationError,
+    OPEN_SOURCE_LICENSE_MANIFEST,
+    SAMPLE_GUIDE_YAML,
+    load_and_validate_config,
 )
 from guideforge.exporter import WrittenGuideExporter
 from guideforge.polyglot import PolyglotCodeRunner, PolyglotStackDetector
@@ -42,7 +42,7 @@ logger = logging.getLogger("guideforge")
 # 1. UNIVERSAL CLI AGENT MANIFEST (FOR ANTIGRAVITY CLI & OTHER CLI AGENTS)
 # ==============================================================================
 
-UNIVERSAL_AGENT_MANIFEST: dict[str, Any] = {
+UNIVERSAL_AGENT_MANIFEST: Dict[str, Any] = {
     "tool_name": "guideforge",
     "version": "0.4.0",
     "license": "MIT (100% Open Source)",
@@ -126,8 +126,8 @@ class ControllerState:
   browser_engine: str = "hybrid"
   status: str = "idle"
   last_stage: str = "none"
-  last_result: dict[str, Any] = field(default_factory=dict)
-  logs: list[str] = field(default_factory=list)
+  last_result: Dict[str, Any] = field(default_factory=dict)
+  logs: List[str] = field(default_factory=list)
 
   def log(self, message: str) -> None:
     ts = time.strftime("%H:%M:%S")
@@ -153,13 +153,13 @@ class GuideForgeController:
       return p.read_text(encoding="utf-8")
     return SAMPLE_GUIDE_YAML
 
-  def save_config_text(self, yaml_text: str) -> dict[str, Any]:
+  def save_config_text(self, yaml_text: str) -> Dict[str, Any]:
     p = Path(self.state.config_path)
     p.write_text(yaml_text, encoding="utf-8")
     self.state.log(f"Updated configuration file: {p}")
     return self.validate_current()
 
-  def validate_current(self) -> dict[str, Any]:
+  def validate_current(self) -> Dict[str, Any]:
     p = Path(self.state.config_path)
     try:
       cfg, warnings = load_and_validate_config(p)
@@ -183,7 +183,7 @@ class GuideForgeController:
       self.state.log(f"Validation failed: {exc}")
       return res
 
-  def inspect_stack(self, project_dir: str = ".") -> dict[str, Any]:
+  def inspect_stack(self, project_dir: str = ".") -> Dict[str, Any]:
     detector = PolyglotStackDetector(Path(project_dir))
     report = detector.inspect()
     res = {"status": "ok", "stage": "stack", "stack_report": report}
@@ -193,7 +193,7 @@ class GuideForgeController:
     self.state.log(f"Inspected stack in '{project_dir}': detected {langs}")
     return res
 
-  def execute_code(self, language: str, code: str, workdir: str = ".") -> dict[str, Any]:
+  def execute_code(self, language: str, code: str, workdir: str = ".") -> Dict[str, Any]:
     snippet = CodeSnippet(language=language, code=code, execute=True, workdir=workdir)
     exec_res = self.code_runner.run_snippet(snippet, default_workdir=Path(workdir))
     res = {"status": "ok", "stage": "exec", "result": asdict(exec_res)}
@@ -206,7 +206,7 @@ class GuideForgeController:
 
   async def discover_workflow(
       self, url: str, goal: str, model: str = "llama3.1:8b"
-  ) -> dict[str, Any]:
+  ) -> Dict[str, Any]:
     self.state.status = "running:discover"
     self.state.log(f"Starting browser-use discovery on {url}: '{goal}'")
     runner = BrowserUseRunner(AgentLLMConfig(model=model))
@@ -224,8 +224,8 @@ class GuideForgeController:
     return res
 
   async def run_pipeline_stage(
-      self, stage: str, audience_override: str | None = None
-  ) -> dict[str, Any]:
+      self, stage: str, audience_override: Optional[str] = None
+  ) -> Dict[str, Any]:
     self.state.status = f"running:{stage}"
     self.state.log(f"Starting pipeline stage '{stage}'...")
     try:
@@ -315,7 +315,7 @@ def launch_nicegui_controller(
   # A. FastAPI Control Endpoints for Antigravity CLI & External CLI Agents
   # ----------------------------------------------------------------------------
   @app.get("/api/v1/status")
-  async def api_status() -> dict[str, Any]:
+  async def api_status() -> Dict[str, Any]:
     return {
         "status": "ok",
         "controller": asdict(controller.state),
@@ -323,41 +323,41 @@ def launch_nicegui_controller(
     }
 
   @app.get("/api/v1/agent-manifest")
-  async def api_agent_manifest() -> dict[str, Any]:
+  async def api_agent_manifest() -> Dict[str, Any]:
     return UNIVERSAL_AGENT_MANIFEST
 
   @app.post("/api/v1/config")
-  async def api_update_config(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+  async def api_update_config(payload: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     yaml_text = str(payload.get("yaml", ""))
     if not yaml_text:
       return {"status": "error", "error": "Missing 'yaml' field in request body."}
     return controller.save_config_text(yaml_text)
 
   @app.post("/api/v1/validate")
-  async def api_validate() -> dict[str, Any]:
+  async def api_validate() -> Dict[str, Any]:
     return controller.validate_current()
 
   @app.post("/api/v1/stack")
-  async def api_stack(payload: dict[str, Any] = Body(default={})) -> dict[str, Any]:
+  async def api_stack(payload: Dict[str, Any] = Body(default={})) -> Dict[str, Any]:
     project_dir = str(payload.get("project_dir", "."))
     return controller.inspect_stack(project_dir)
 
   @app.post("/api/v1/exec")
-  async def api_exec(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+  async def api_exec(payload: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     lang = str(payload.get("language", "python"))
     code = str(payload.get("code", ""))
     workdir = str(payload.get("workdir", "."))
     return controller.execute_code(lang, code, workdir)
 
   @app.post("/api/v1/discover")
-  async def api_discover(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+  async def api_discover(payload: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     url = str(payload.get("url", "http://localhost:3000"))
     goal = str(payload.get("goal", "Sign in and explore dashboard"))
     model = str(payload.get("model", "llama3.1:8b"))
     return await controller.discover_workflow(url=url, goal=goal, model=model)
 
   @app.post("/api/v1/pipeline/{stage}")
-  async def api_pipeline(stage: str, payload: dict[str, Any] = Body(default={})) -> dict[str, Any]:
+  async def api_pipeline(stage: str, payload: Dict[str, Any] = Body(default={})) -> Dict[str, Any]:
     aud = payload.get("audience")
     return await controller.run_pipeline_stage(stage, audience_override=aud)
 
@@ -504,8 +504,8 @@ def launch_nicegui_controller(
 def send_remote_agent_command(
     server_url: str,
     action: str,
-    payload: dict[str, Any] | None = None,
-) -> dict[str, Any]:
+    payload: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
   """Sends a command from Antigravity CLI (or any shell agent) to a running NiceGUI server."""
   base = server_url.rstrip("/")
   route_map = {

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 import shutil
 import subprocess
-from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List
 
 from guideforge.config import GuideConfig
 from guideforge.utils import PIL_AVAILABLE, _hex_to_rgb, _load_font, _run_cmd
@@ -32,8 +32,8 @@ class VideoProducer:
 
   def render_video(
       self,
-      recording_manifest: dict[str, Any],
-      voice_manifest: dict[str, Any],
+      recording_manifest: Dict[str, Any],
+      voice_manifest: Dict[str, Any],
   ) -> Path:
     self.cards_dir.mkdir(parents=True, exist_ok=True)
     width, height = self.config.viewport_size
@@ -67,7 +67,7 @@ class VideoProducer:
 
     segments_dir = self.out_dir / "video_segments"
     segments_dir.mkdir(parents=True, exist_ok=True)
-    segment_files: list[Path] = []
+    segment_files: List[Path] = []
 
     # 1. Intro segment with silent audio
     intro_mp4 = segments_dir / "00_intro.mp4"
