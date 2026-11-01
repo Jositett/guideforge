@@ -129,6 +129,18 @@ if (Test-Path (Join-Path (Get-Location).Path "pyproject.toml")) {
 
 Set-Location $projectRoot
 
+# Ensure pyproject.toml uses requires-python = ">=3.11,<4.0" (required by browser-use universal uv resolution)
+$pyprojectPath = Join-Path $projectRoot "pyproject.toml"
+if (Test-Path $pyprojectPath) {
+    $pyContent = Get-Content $pyprojectPath -Raw
+    if ($pyContent -match 'requires-python\s*=\s*">=3\.10"') {
+        Write-Host "Updating pyproject.toml requires-python to '>=3.11,<4.0' for browser-use compatibility..." -ForegroundColor Yellow
+        $pyContent = $pyContent -replace 'requires-python\s*=\s*">=3\.10"', 'requires-python = ">=3.11,<4.0"'
+        $pyContent = $pyContent -replace '"piper-tts>=1\.2\.0",', '"piper-tts>=1.2.0; sys_platform == ''linux''",'
+        Set-Content -Path $pyprojectPath -Value $pyContent -Encoding UTF8
+    }
+}
+
 # ==============================================================================
 # STEP 2: Verify / Install System Prerequisites (`uv`, `git`, `gh`, `ffmpeg`)
 # ==============================================================================

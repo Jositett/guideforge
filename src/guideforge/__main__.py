@@ -1,5 +1,6 @@
-from guideforge.cli import main
 import sys
+
+from guideforge.cli import main
 
 if __name__ == "__main__":
   sys.exit(main())

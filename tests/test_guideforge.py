@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import io
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from guideforge.cli import main
 from guideforge.config import (
-    CodeSnippet,
-    ConfigValidationError,
-    OPEN_SOURCE_LICENSE_MANIFEST,
-    load_and_validate_config,
+  OPEN_SOURCE_LICENSE_MANIFEST,
+  CodeSnippet,
+  ConfigValidationError,
+  load_and_validate_config,
 )
 from guideforge.polyglot import PolyglotCodeRunner, PolyglotStackDetector
 
@@ -153,7 +153,7 @@ class GuideForgeOpenSourcePolyglotTestSuite(unittest.TestCase):
       out_dir = Path(tmp) / "dist"
       main(["init", "-o", str(cfg_file)])
       text = cfg_file.read_text(encoding="utf-8").replace(
-          'output_dir: "./dist"', f'output_dir: "{out_dir}"'
+          'output_dir: "./dist"', f'output_dir: "{out_dir.as_posix()}"'
       )
       cfg_file.write_text(text, encoding="utf-8")
 
@@ -174,3 +174,4 @@ class GuideForgeOpenSourcePolyglotTestSuite(unittest.TestCase):
 
 if __name__ == "__main__":
   unittest.main()
+

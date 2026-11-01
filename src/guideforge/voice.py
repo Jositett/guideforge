@@ -4,18 +4,18 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
 import shutil
 import subprocess
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any
 
 from guideforge.config import GuideConfig
 from guideforge.utils import (
-    _format_timestamp_srt,
-    _format_timestamp_vtt,
-    _generate_silent_audio,
-    _probe_media_duration,
-    _split_caption_chunks,
+  _format_timestamp_srt,
+  _format_timestamp_vtt,
+  _generate_silent_audio,
+  _probe_media_duration,
+  _split_caption_chunks,
 )
 
 logger = logging.getLogger("guideforge")
@@ -32,11 +32,11 @@ class NarrationEngine:
     self.vtt_path = self.out_dir / "subtitles.vtt"
     self.voice_manifest_path = self.out_dir / "voice_manifest.json"
 
-  async def generate_all(self) -> Dict[str, Any]:
+  async def generate_all(self) -> dict[str, Any]:
     """Generates per-step audio tracks, measures exact durations, and outputs SRT & VTT subtitles."""
     self.audio_dir.mkdir(parents=True, exist_ok=True)
 
-    step_audio_records: List[Dict[str, Any]] = []
+    step_audio_records: list[dict[str, Any]] = []
     current_time = self.config.video.intro_duration
 
     for idx, step in enumerate(self.config.steps, start=1):
@@ -137,8 +137,8 @@ class NarrationEngine:
     estimated_sec = max(2.2, len(text.split()) / (2.6 * max(0.5, self.config.tts.speed)))
     _generate_silent_audio(output_path, duration_sec=estimated_sec)
 
-  def _write_srt(self, records: List[Dict[str, Any]]) -> None:
-    blocks: List[str] = []
+  def _write_srt(self, records: list[dict[str, Any]]) -> None:
+    blocks: list[str] = []
     cue_idx = 1
     for rec in records:
       chunks = _split_caption_chunks(rec["narration"], max_chars=72)
@@ -155,8 +155,8 @@ class NarrationEngine:
         cue_idx += 1
     self.srt_path.write_text("\n".join(blocks), encoding="utf-8")
 
-  def _write_vtt(self, records: List[Dict[str, Any]]) -> None:
-    lines: List[str] = ["WEBVTT\n"]
+  def _write_vtt(self, records: list[dict[str, Any]]) -> None:
+    lines: list[str] = ["WEBVTT\n"]
     for rec in records:
       chunks = _split_caption_chunks(rec["narration"], max_chars=72)
       total_dur = rec["subtitle_end_sec"] - rec["subtitle_start_sec"]

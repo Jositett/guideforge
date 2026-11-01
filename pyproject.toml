@@ -97,3 +97,4 @@ python_version = "3.11"
 mypy_path = "src"
 ignore_missing_imports = true
 
+asyncio_default_fixture_loop_scope = "function"

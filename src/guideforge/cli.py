@@ -4,32 +4,32 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from dataclasses import asdict
 import json
 import logging
-from pathlib import Path
 import sys
-from typing import Any, Dict, List, Optional
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
 
 from guideforge.browser_agent import BrowserUseRunner
 from guideforge.config import (
-    AgentLLMConfig,
-    CodeSnippet,
-    ConfigValidationError,
-    GuideConfig,
-    OPEN_SOURCE_LICENSE_MANIFEST,
-    SAMPLE_GUIDE_YAML,
-    load_and_validate_config,
+  OPEN_SOURCE_LICENSE_MANIFEST,
+  SAMPLE_GUIDE_YAML,
+  AgentLLMConfig,
+  CodeSnippet,
+  ConfigValidationError,
+  GuideConfig,
+  load_and_validate_config,
 )
 from guideforge.exporter import WrittenGuideExporter
-from guideforge.ui_controller import (
-    GuideForgeController,
-    UNIVERSAL_AGENT_MANIFEST,
-    launch_nicegui_controller,
-    send_remote_agent_command,
-)
 from guideforge.polyglot import PolyglotCodeRunner, PolyglotStackDetector
 from guideforge.recorder import BrowserRecorder
+from guideforge.ui_controller import (
+  UNIVERSAL_AGENT_MANIFEST,
+  GuideForgeController,
+  launch_nicegui_controller,
+  send_remote_agent_command,
+)
 from guideforge.video import VideoProducer
 from guideforge.voice import NarrationEngine
 
@@ -43,7 +43,7 @@ logger = logging.getLogger("guideforge")
 
 def _load_or_exit(
     config_arg: str,
-    audience_override: Optional[str] = None,
+    audience_override: str | None = None,
     json_output: bool = False,
 ) -> GuideConfig:
   try:
@@ -110,7 +110,7 @@ def cmd_validate(config_path: Path, json_output: bool = False) -> int:
     return 1
 
 
-def cmd_stack(project_dir: Path, json_output: bool = False) -> Dict[str, Any]:
+def cmd_stack(project_dir: Path, json_output: bool = False) -> dict[str, Any]:
   detector = PolyglotStackDetector(project_dir)
   report = detector.inspect()
   if json_output:
@@ -133,7 +133,7 @@ def cmd_exec(
     code_or_file: str,
     workdir: str = ".",
     json_output: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
   p = Path(code_or_file)
   if p.exists() and p.is_file():
     code_text = p.read_text(encoding="utf-8")
@@ -165,7 +165,7 @@ def cmd_exec(
   return res_dict
 
 
-def cmd_licenses(json_output: bool = False) -> List[Dict[str, str]]:
+def cmd_licenses(json_output: bool = False) -> list[dict[str, str]]:
   if json_output:
     print(
         json.dumps(
@@ -189,7 +189,7 @@ def cmd_licenses(json_output: bool = False) -> List[Dict[str, str]]:
   return OPEN_SOURCE_LICENSE_MANIFEST
 
 
-def cmd_voice(cfg: GuideConfig, json_output: bool = False) -> Dict[str, Any]:
+def cmd_voice(cfg: GuideConfig, json_output: bool = False) -> dict[str, Any]:
   engine = NarrationEngine(cfg)
   manifest = asyncio.run(engine.generate_all())
   if json_output:
@@ -199,9 +199,9 @@ def cmd_voice(cfg: GuideConfig, json_output: bool = False) -> Dict[str, Any]:
 
 def cmd_record(
     cfg: GuideConfig,
-    step_durations: Optional[Dict[str, float]] = None,
+    step_durations: dict[str, float] | None = None,
     json_output: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
   if step_durations is None:
     v_path = Path(cfg.output_dir) / "voice_manifest.json"
     if v_path.exists():
@@ -222,9 +222,9 @@ def cmd_record(
 
 def cmd_render(
     cfg: GuideConfig,
-    formats: Optional[List[str]] = None,
+    formats: list[str] | None = None,
     json_output: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
   out_dir = Path(cfg.output_dir)
   rec_manifest_path = out_dir / "recording_manifest.json"
   voice_manifest_path = out_dir / "voice_manifest.json"
@@ -398,7 +398,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
   return parser
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
   parser = build_arg_parser()
   args = parser.parse_args(argv)
 

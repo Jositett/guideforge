@@ -5,12 +5,12 @@ from __future__ import annotations
 import html
 import logging
 import os
-from pathlib import Path
 import shutil
 import subprocess
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any
 
-from guideforge.config import GuideConfig, OPEN_SOURCE_LICENSE_MANIFEST
+from guideforge.config import OPEN_SOURCE_LICENSE_MANIFEST, GuideConfig
 from guideforge.utils import PIL_AVAILABLE, _hex_to_rgb
 
 if PIL_AVAILABLE:
@@ -28,13 +28,13 @@ class WrittenGuideExporter:
 
   def export_all(
       self,
-      recording_manifest: Dict[str, Any],
-      formats: Optional[List[str]] = None,
-  ) -> Dict[str, str]:
+      recording_manifest: dict[str, Any],
+      formats: list[str] | None = None,
+  ) -> dict[str, str]:
     target_formats = [
         f.lower() for f in (formats or self.config.export_formats)
     ]
-    exported: Dict[str, str] = {}
+    exported: dict[str, str] = {}
 
     html_path = self.out_dir / "user_manual.html"
     html_content = self._build_html(recording_manifest)
@@ -65,7 +65,7 @@ class WrittenGuideExporter:
 
     return exported
 
-  def _build_html(self, recording_manifest: Dict[str, Any]) -> str:
+  def _build_html(self, recording_manifest: dict[str, Any]) -> str:
     b = self.config.branding
     audience = self.config.audience
     rec_steps = {s["id"]: s for s in recording_manifest.get("steps", [])}
@@ -95,7 +95,7 @@ class WrittenGuideExporter:
       </section>
       """
 
-    steps_html: List[str] = []
+    steps_html: list[str] = []
     for idx, step in enumerate(self.config.steps, start=1):
       s_meta = rec_steps.get(step.id, {})
       shot_path = s_meta.get(
@@ -311,13 +311,13 @@ class WrittenGuideExporter:
 </html>
 """
 
-  def _build_markdown(self, recording_manifest: Dict[str, Any]) -> str:
+  def _build_markdown(self, recording_manifest: dict[str, Any]) -> str:
     b = self.config.branding
     audience = self.config.audience
     rec_steps = {s["id"]: s for s in recording_manifest.get("steps", [])}
     stack_report = recording_manifest.get("stack_report", {})
 
-    lines: List[str] = [
+    lines: list[str] = [
         f"# {self.config.title}",
         "",
         f"**{b.company_name}** | Version {self.config.version} | Audience: `{audience}`",
@@ -422,7 +422,7 @@ class WrittenGuideExporter:
           pass
 
     if PIL_AVAILABLE:
-      pages: List[Image.Image] = []
+      pages: list[Image.Image] = []
       for idx, step in enumerate(self.config.steps, start=1):
         shot = self.out_dir / "screenshots" / f"{idx:02d}_{step.id}.png"
         if shot.exists():
@@ -433,7 +433,7 @@ class WrittenGuideExporter:
         )
 
   def _export_docx(
-      self, recording_manifest: Dict[str, Any], docx_path: Path
+      self, recording_manifest: dict[str, Any], docx_path: Path
   ) -> None:
     try:
       import docx

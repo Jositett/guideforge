@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 import json
 import logging
-from pathlib import Path
 import shutil
-from typing import Any, Dict, Optional
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
 
 from guideforge.browser_agent import BrowserUseRunner
 from guideforge.config import GuideConfig, GuideStep
 from guideforge.polyglot import (
-    AppServerLifecycle,
-    CodeExecutionResult,
-    PolyglotCodeRunner,
-    PolyglotStackDetector,
+  AppServerLifecycle,
+  PolyglotCodeRunner,
+  PolyglotStackDetector,
 )
 from guideforge.utils import PIL_AVAILABLE, _hex_to_rgb, _load_font
 
@@ -128,14 +127,14 @@ class BrowserRecorder:
     self.stack_detector = PolyglotStackDetector(Path(config.project_dir))
     self.browser_agent = BrowserUseRunner(config.agent_llm)
 
-  async def run(self, step_durations: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
+  async def run(self, step_durations: dict[str, float] | None = None) -> dict[str, Any]:
     """Executes stack inspection, optional app server boot, browser automation, and polyglot code blocks."""
     self.screenshots_dir.mkdir(parents=True, exist_ok=True)
     self.raw_video_dir.mkdir(parents=True, exist_ok=True)
 
     stack_report = self.stack_detector.inspect()
-    code_results: Dict[str, Dict[str, Any]] = {}
-    agent_traces: Dict[str, Dict[str, Any]] = {}
+    code_results: dict[str, dict[str, Any]] = {}
+    agent_traces: dict[str, dict[str, Any]] = {}
     for step in self.config.steps:
       if step.action == "agent_task" or (self.config.browser_engine == "browser-use" and not step.selector):
         trace = await self.browser_agent.execute_step_goal(step, base_url=self.config.base_url)
@@ -161,12 +160,12 @@ class BrowserRecorder:
 
   async def _record_browser_or_fallback(
       self,
-      step_durations: Optional[Dict[str, float]],
-      stack_report: Dict[str, Any],
-      code_results: Dict[str, Dict[str, Any]],
-  ) -> Dict[str, Any]:
+      step_durations: dict[str, float] | None,
+      stack_report: dict[str, Any],
+      code_results: dict[str, dict[str, Any]],
+  ) -> dict[str, Any]:
     width, height = self.config.viewport_size
-    manifest: Dict[str, Any] = {
+    manifest: dict[str, Any] = {
         "title": self.config.title,
         "audience": self.config.audience,
         "resolution": f"{width}x{height}",
@@ -267,9 +266,9 @@ class BrowserRecorder:
 
   async def _execute_step(
       self, page: Any, step: GuideStep
-  ) -> Optional[Dict[str, float]]:
+  ) -> dict[str, float] | None:
     await self._inject_visual_helpers(page)
-    bbox: Optional[Dict[str, float]] = None
+    bbox: dict[str, float] | None = None
 
     if step.action in ("navigate", "run_code"):
       if step.action == "navigate":
@@ -326,8 +325,8 @@ class BrowserRecorder:
       output_path: Path,
       step_index: int,
       step: GuideStep,
-      bbox: Optional[Dict[str, float]],
-      code_result: Optional[Dict[str, Any]] = None,
+      bbox: dict[str, float] | None,
+      code_result: dict[str, Any] | None = None,
   ) -> None:
     """Draws numbered callout badges, highlight frames, and optional developer terminal overlay."""
     if not PIL_AVAILABLE or not raw_path.exists():
@@ -440,12 +439,12 @@ class BrowserRecorder:
 
   def _run_synthetic_fallback(
       self,
-      step_durations: Optional[Dict[str, float]],
-      stack_report: Dict[str, Any],
-      code_results: Dict[str, Dict[str, Any]],
-  ) -> Dict[str, Any]:
+      step_durations: dict[str, float] | None,
+      stack_report: dict[str, Any],
+      code_results: dict[str, dict[str, Any]],
+  ) -> dict[str, Any]:
     width, height = self.config.viewport_size
-    manifest: Dict[str, Any] = {
+    manifest: dict[str, Any] = {
         "title": self.config.title,
         "audience": self.config.audience,
         "resolution": f"{width}x{height}",
@@ -495,7 +494,7 @@ class BrowserRecorder:
       step: GuideStep,
       width: int,
       height: int,
-  ) -> Dict[str, float]:
+  ) -> dict[str, float]:
     img = Image.new("RGB", (width, height), (248, 250, 252))
     draw = ImageDraw.Draw(img)
     primary_rgb = _hex_to_rgb(self.config.branding.primary_color)

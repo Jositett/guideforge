@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
-import json
 import logging
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import yaml
 
-from guideforge.config import AgentLLMConfig, GuideConfig, GuideStep
+from guideforge.config import AgentLLMConfig, GuideStep
 
 logger = logging.getLogger("guideforge")
 
@@ -21,8 +21,8 @@ class AgentExecutionTrace:
   engine: str
   model: str
   executed_live: bool
-  visited_urls: List[str] = field(default_factory=list)
-  actions_taken: List[str] = field(default_factory=list)
+  visited_urls: list[str] = field(default_factory=list)
+  actions_taken: list[str] = field(default_factory=list)
   extracted_content: str = ""
 
 
@@ -36,7 +36,7 @@ class BrowserUseRunner:
       self,
       step: GuideStep,
       base_url: str,
-      screenshot_path: Optional[Path] = None,
+      screenshot_path: Path | None = None,
   ) -> AgentExecutionTrace:
     """Runs a natural-language `agent_task` step using `browser-use` and local `ChatOllama`."""
     goal_text = step.goal or step.instruction or step.narration
@@ -91,7 +91,7 @@ class BrowserUseRunner:
       goal: str,
       output_yaml_path: Path,
       audience: str = "both",
-  ) -> Dict[str, Any]:
+  ) -> dict[str, Any]:
     """Autonomously explores `url` based on `goal` using `browser-use` and writes a draft `guide.yaml`."""
     dummy_step = GuideStep(
         id="discover_01",

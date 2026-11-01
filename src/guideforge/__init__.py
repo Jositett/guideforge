@@ -1,6 +1,7 @@
 """GuideForge — 100% Open-Source Client & Developer Manual Generator with Polyglot Code Runner."""
 
 from guideforge.config import (
+    OPEN_SOURCE_LICENSE_MANIFEST,
     AppServerConfig,
     BrandingConfig,
     CalloutBox,
@@ -8,18 +9,17 @@ from guideforge.config import (
     ConfigValidationError,
     GuideConfig,
     GuideStep,
-    OPEN_SOURCE_LICENSE_MANIFEST,
     TTSConfig,
     VideoConfig,
     load_and_validate_config,
 )
-from guideforge.ui_controller import GuideForgeController, UNIVERSAL_AGENT_MANIFEST
 from guideforge.polyglot import (
     CodeExecutionResult,
     LanguageStackInfo,
     PolyglotCodeRunner,
     PolyglotStackDetector,
 )
+from guideforge.ui_controller import UNIVERSAL_AGENT_MANIFEST, GuideForgeController
 
 __version__ = "0.4.0"
 __all__ = [
